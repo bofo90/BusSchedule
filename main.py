@@ -35,7 +35,7 @@ seats_info = pandas DataFrame that contains how the seats in the bus are being
 stops = 20  # <= 20
 seats = 30  # <= 30
 proportional_ticket = True
-seed = 0
+seed = 1
 
 groups_list = generate_groups(stops, seats, seed)
 
