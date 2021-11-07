@@ -47,6 +47,13 @@ def NiceGraph2D(axes, nameX, nameY, mincoord = [np.NaN, np.NaN], maxcoord = [np.
     return
 
 def present_results(boarding_groups, seats_info, stops, seats, seed, total_passengers, proportional_tickets):
+    """
+    Creates two plots, one of the schedule of the bus with the occupancy of 
+    the seats. The colors in this plot differentiate the different groups. The
+    line at the bottom is the bus route. The second plot shows all the groups 
+    and their start and end stops. The color represents if it boards or not 
+    the bus. At the bottom is also the bus route.
+    """
     
     plt.close('all')
     plot_schedule(seats_info, seats, stops, seed, proportional_tickets)
@@ -67,30 +74,31 @@ def present_results(boarding_groups, seats_info, stops, seats, seed, total_passe
     #     demand[i] = boarding_groups['passengers'][(
     #         boarding_groups['start']<=i) & (boarding_groups['end']>i)].sum() 
     # ax4.plot(demand)
-    
 
-    
-    # fig1.savefig(f'Results/Graph_{np.shape(all_points)[0]}points_{alpha}alpha_{seed}seed.pdf', transparent = True)
-    
-    
     return
 
 def plot_schedule(seats_info, seats, stops, seed, proportional_tickets):
     
     fig1 = plt.figure()
     ax1 = plt.subplot(111)
-    ax1.set_axis_off()
+    NiceGraph2D(ax1, 'stops', 'seats', [0,0], [stops-1,seats], buffer= [0.7,0.7])
+    ax1.set_frame_on(False)
+    ax1.axes.get_xaxis().set_visible(False)
 
     groups = np.unique(seats_info['group_id'])
     colors = plt.cm.BrBG(np.linspace(0,1,np.size(groups)))
-
+    
+    for j in range(stops-1):
+        line0, = ax1.plot([j+0.2,j+1-0.2],[0,0], 
+                              c='#E76F51', linewidth=4)
     for _ , s in seats_info.iterrows():
         this_c = colors[groups==s['group_id'],:]
-        ax1.plot([s['start']+0.2,s['end']-0.2],[s['seat_id'],s['seat_id']], 
+        ax1.plot([s['start']+0.2,s['end']-0.2],[s['seat_id']+1,s['seat_id']+1], 
                  c=this_c, linewidth=4)
         # ax1.scatter([s['start']+0.1,s['end']-0.1],[s['seat_id'],s['seat_id']], 
         #             c=this_c, marker='|', s=100)
     
+    ax1.legend([line0], ['bus route'])
     plt.tight_layout()
     fig1.savefig(f'Results/Schedule_{seats}seats_{stops}stops_{seed}seed_{proportional_tickets}propticket.pdf', transparent = True)
 
@@ -100,19 +108,24 @@ def plot_all_groups(boarding_groups, seats, stops, seed, proportional_tickets):
     
     fig2 = plt.figure()
     ax2 = plt.subplot(111)
-    ax2.set_axis_off()
+    NiceGraph2D(ax2, 'stops', 'group', [0,0], [stops-1, boarding_groups.shape[0]], buffer= [0.7,0.7])
+    ax2.set_frame_on(False)
+    ax2.axes.get_xaxis().set_visible(False)
 
+    for j in range(stops-1):
+        line0, = ax2.plot([j+0.2,j+1-0.2],[0,0], 
+                              c='#2A9D8F', linewidth=4)
     i = 0
     for _ , g in boarding_groups.sort_values(by=['start','end']).iterrows():
         if g['boards']:
-            line1, = ax2.plot([g['start']+0.2,g['end']-0.2],[i,i], 
-                              c='#005F73', linewidth=4)
+            line1, = ax2.plot([g['start']+0.2,g['end']-0.2],[i+1,i+1], 
+                              c='#264653', linewidth=4)
         else:
-            line2, = ax2.plot([g['start']+0.2,g['end']-0.2],[i,i],
-                              c='#BB3E03', linewidth=4)
+            line2, = ax2.plot([g['start']+0.2,g['end']-0.2],[i+1,i+1],
+                              c='#E76F51', linewidth=4)
         i += 1
         
-    ax2.legend([line1, line2], ['accepted', 'rejected'])
+    ax2.legend([line1, line2, line0], ['accepted', 'rejected', 'bus route'])
     plt.tight_layout()
     fig2.savefig(f'Results/AllGroups_{seats}seats_{stops}stops_{seed}seed_{proportional_tickets}propticket.pdf', transparent = True)
 
