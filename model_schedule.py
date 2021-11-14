@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from result_analysis import plot_schedule
+import result_analysis as resan
 
 def maximize_income(stops, seats, groups_list, proportional_ticket = False):
     """
@@ -17,7 +17,12 @@ def maximize_income(stops, seats, groups_list, proportional_ticket = False):
     """
  
     groups, ord_groups = create_dataframe(groups_list)
+    
+    resan.simple_all_groups(groups, stops, 'All groups')
+    
     all_seats = create_interval_partitioning(ord_groups)
+    resan.simple_schedule(all_seats, stops, 'Infinite bus')
+    
     seat_matrix = seats_to_matrix(all_seats, stops)
     seat_matrix_red, seat_cost, groups = remove_low_income_seats(
         seat_matrix, groups, seats, proportional_ticket
@@ -105,7 +110,7 @@ def matrix_to_seats(seat_matrix_red, stops):
     
     red_seats = np.empty((0,4))
     # Iterates through all the seats
-    for s in np.arange(seats_num):
+    for s in range(seats_num):
         groups_in_seat = np.unique(seat_matrix_red[s,:])
         # Itrates through all the groups in the specified seat
         for g in groups_in_seat[1:]:
@@ -183,10 +188,11 @@ def remove_seats(seat_matrix, seat_cost, groups):
     
     # Realocate groups to the bus if possible
     elim_groups = groups['group_id'][groups['boards']==False].values
+    av_seats = np.arange(np.shape(seat_matrix)[0])
     for g in elim_groups:
         pos_seats = (seat_matrix[:,groups['start'][g]:groups['end'][g]]==-1).all(axis=1)
         if np.sum(pos_seats)>=groups['passengers'][g]:
-            seats_to_occ = np.arange(np.shape(seat_matrix)[0])[pos_seats][:groups['passengers'][g]]
+            seats_to_occ = av_seats[pos_seats][:groups['passengers'][g]]
             seat_matrix[seats_to_occ,groups['start'][g]:groups['end'][g]] = g
             groups.loc[g,'boards'] = True
     
